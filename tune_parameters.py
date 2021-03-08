@@ -20,7 +20,7 @@ if __name__ == "__main__":
     sensor = pipeline.get_active_profile().get_device().query_sensors()[1]
 
     # Set the exposure anytime during the operation
-    sensor.set_option(rs.option.exposure, 1000.000)
+    sensor.set_option(rs.option.exposure, 10.000)
 
     # Only the first frame is captured in manual exposure mode with an unknown exposure value!
     for _ in range(10):
