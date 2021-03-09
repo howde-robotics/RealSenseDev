@@ -16,6 +16,9 @@ import glob
 # termination criteria
 cbRow = 8
 cbCol = 6
+cbSideLengthInches = 5.91/6
+cbSideLengthMM = cbSideLengthInches * 0.0254
+
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
 objp = np.zeros((cbRow*cbCol,3), np.float32)
@@ -33,12 +36,15 @@ for fname in images:
     if ret == True:
         print("Pattern Found")
 
+        # scale object points by known side length
+        objp *= cbSideLengthMM
         objpoints.append(objp)
         corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
         imgpoints.append(corners)
         # Draw and display the corners
         cv.drawChessboardCorners(img, (cbRow,cbCol), corners2, ret)
         cv.imshow('img', img)
+        # print(objp)
         cv.waitKey(0)
 
 cv.destroyAllWindows()
