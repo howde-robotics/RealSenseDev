@@ -17,7 +17,7 @@ import glob
 cbRow = 8
 cbCol = 6
 cbSideLengthInches = 5.91/6
-cbSideLengthMM = cbSideLengthInches * 0.0254
+cbSideLengthM = cbSideLengthInches * 0.0254
 
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
@@ -37,7 +37,7 @@ for fname in images:
         print("Pattern Found")
 
         # scale object points by known side length
-        objp *= cbSideLengthMM
+        objp *= cbSideLengthM
         objpoints.append(objp)
         corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
         imgpoints.append(corners)
