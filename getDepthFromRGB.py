@@ -1,3 +1,6 @@
+import rospy
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Image
 import pyrealsense2 as rs
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,36 +66,12 @@ if __name__ == "__main__":
     plt.scatter(color_points[:,0],color_points[:,1])
     plt.show()
 
+    center_idx = [0,0]
+    center_idx[0] = int(((min(depth_points[:,0])+max(depth_points[:,0]))/2.0))
+    center_idx[1] = int(((min(depth_points[:,1])+max(depth_points[:,1]))/2.0))
+    # print(center_idx)
+    # exit()
+    center_dist = depth_frame.get_distance(center_idx[0], center_idx[1])
+    print(center_dist)
 
-    # Get the sensor once at the beginning. (Sensor index: 1)
-    # sensor = pipeline.get_active_profile().get_device().query_sensors()[1]
-
-    # # Set the exposure anytime during the operation
-    # #sensor.set_option(rs.option.exposure, 1000.000)
-
-    # # Only the first frame is captured in manual exposure mode with an unknown exposure value!
-    # for _ in range(10):
-    #     frames = pipeline.wait_for_frames()
-    #     depth = np.asanyarray(frames.get_depth_frame().get_data())
-    #     color = np.asanyarray(frames.get_color_frame().get_data())
-    #     np.save("img15_depth", depth)
-    #     np.save("img15_color", color)
-    #     # exit()
-
-    #     test = np.load("img15_depth.npy")
-    #     test_color = np.load("img15_color.npy")
-    #     plt.imshow(test)
-    #     plt.show()
-
-    #     plt.imshow(test_color)
-    #     plt.show()
-    #     # print(depth)
-    #     # plt.imshow(depth)
-    #     # plt.imsave("test.jpg", depth)
-    #     # depth2 = depth*float(255)
-    #     # depth2 = depth.astype('uint8')
-    #     # cv2.imwrite("test.jpg", depth2)
-
-    #     # cv2.imshow("test.jpg")
-    #     # plt.show()
     pipeline.stop()
