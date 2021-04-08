@@ -22,7 +22,7 @@ class DetectedObject():
 		self.ymin = 0
 		self.ymax = 0
 
-class RgbHumanDetectionNode():
+class rgb_human_detection_node():
 	def __init__(self):
 		# Needed for depth image visualization
 		self.counter_depth = 0
@@ -253,7 +253,7 @@ class RgbHumanDetectionNode():
 	    self.counter_rgb += 1
 
 def main():
-	rgbDetectionNode = RgbHumanDetectionNode()
+	rgbDetectionNode = rgb_human_detection_node()
 	rospy.init_node('rgbHD',anonymous=True)
 
 	# These two lines needed for continuous visualization
