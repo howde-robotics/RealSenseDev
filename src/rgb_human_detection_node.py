@@ -5,8 +5,8 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
 import pyrealsense2 as rs2
 from darknet_ros_msgs.msg import BoundingBoxes
-from darknet_ros_msgs.msg import ObjectInfo
-from darknet_ros_msgs.msg import Objects
+from dragoon_messages.msg import ObjectInfo
+from dragoon_messages.msg import Objects
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
