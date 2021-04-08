@@ -106,7 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES rgb_human_detection_node
-#  CATKIN_DEPENDS cv_bridge darknet_ros_msgs rospy sensor_msgs
+  CATKIN_DEPENDS cv_bridge darknet_ros_msgs rospy sensor_msgs
 #  DEPENDS system_lib
 )
 
