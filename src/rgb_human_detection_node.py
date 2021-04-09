@@ -165,6 +165,9 @@ class rgb_human_detection_node():
 	    depth_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding="passthrough")
 	    # depth_image = bridge.imgmsg_to_cv2(ros_image, ros_image.encoding)
 
+	    #clear previous msgs
+	    self.poseMsgs = Objects()
+
 	    for obj in self.obs:
 	    	# Get YOLO bbox corners
 		    color_points = [
@@ -186,10 +189,10 @@ class rgb_human_detection_node():
 		    # Visualize bboxes in depth image
 		    if self.scat_depth != None:
 		        self.scat_depth.remove()
-		    plt.imshow(depth_image)
-		    self.scat_depth = plt.scatter(depth_points[:,0],depth_points[:,1])
-		    plt.show()
-		    plt.pause(0.00000000001)
+		    #plt.imshow(depth_image)
+		    #self.scat_depth = plt.scatter(depth_points[:,0],depth_points[:,1])
+		    #plt.show()
+		    #plt.pause(0.00000000001)
 
 		    # Get mins and maxes of depth image bbox
 		    depth_xmin = min(depth_points[:,0])
@@ -245,20 +248,20 @@ class rgb_human_detection_node():
 	        for obj in self.obs:
 		        if self.scat_rgb != None:
 		            self.scat_rgb.remove()
-		        plt.imshow(color_image)
-		        self.scat_rgb = plt.scatter(np.array([obj.xmin, obj.xmin, obj.xmax, obj.xmax]),np.array([obj.ymin, obj.ymax, obj.ymin, obj.ymax]))
-		        plt.show()
-		        plt.pause(0.00000000001)
+		        #plt.imshow(color_image)
+		        #self.scat_rgb = plt.scatter(np.array([obj.xmin, obj.xmin, obj.xmax, obj.xmax]),np.array([obj.ymin, obj.ymax, obj.ymin, obj.ymax]))
+		        #plt.show()
+		        #plt.pause(0.00000000001)
 
 	    self.counter_rgb += 1
 
 def main():
-	rgbDetectionNode = rgb_human_detection_node()
 	rospy.init_node('rgbHD',anonymous=True)
+	rgbDetectionNode = rgb_human_detection_node()
 
 	# These two lines needed for continuous visualization
-	plt.ion()
-	plt.show()
+	#plt.ion()
+	#plt.show()
 
 	rospy.spin()
 
