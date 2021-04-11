@@ -24,6 +24,10 @@ class DetectedObject():
 
 class rgb_human_detection_node():
 	def __init__(self):
+		# Define type of depth extraction
+		# self.centroid = True
+		self.binning = True
+
 		# Needed for depth image visualization
 		self.counter_depth = 0
 		self.scat_depth = None
@@ -187,8 +191,8 @@ class rgb_human_detection_node():
 		    depth_points = np.array(depth_points)
 
 		    # Visualize bboxes in depth image
-		    if self.scat_depth != None:
-		        self.scat_depth.remove()
+		    # if self.scat_depth != None:
+		    #     self.scat_depth.remove()
 		    #plt.imshow(depth_image)
 		    #self.scat_depth = plt.scatter(depth_points[:,0],depth_points[:,1])
 		    #plt.show()
@@ -202,6 +206,22 @@ class rgb_human_detection_node():
 
 		    # Convert the depth image to a Numpy array
 		    depth_array = np.array(depth_image, dtype=np.float32)
+
+		    # Find all pixel depth in bbox in order to find mode (best_depth)
+		    if self.binning:
+			    bbox_pixel_depths = []
+			    for i in range(int(depth_xmin), int(depth_xmax+1)):
+			        for j in range(int(depth_ymin), int(depth_ymax+1)):
+			            bbox_pixel_depths.append(depth_array[j, i])
+
+			    hist, bin_edges = np.histogram(bbox_pixel_depths, bins=20)
+			    max_index = np.argmax(hist)
+			    best_depth = (bin_edges[max_index]+bin_edges[max_index+1])/2000.0
+
+		    # plt.hist(bbox_pixel_depths, bins = 10)
+		    # plt.xlabel("Depth in [m]")
+		    # plt.ylabel("Number of pixels in bounding box")
+		    # plt.show()
 
 		    # Current implementation: get depth of center of bbox - need to fix
 		    # center_idx = np.array(depth_array.shape) / 2
@@ -222,7 +242,10 @@ class rgb_human_detection_node():
 		        poseMsg = ObjectInfo()
 		        poseMsg.pose.x = result[0]/1000.0
 		        poseMsg.pose.y = result[1]/1000.0
-		        poseMsg.pose.z = result[2]/1000.0
+		        if self.binning:
+		        	poseMsg.pose.z = best_depth
+		        elif self.centroid:
+		        	poseMsg.pose.z = result[2]/1000.0
 		        poseMsg.probability = obj.probability
 		        poseMsg.id = obj.id
 		        poseMsg.Class = obj.Class  
