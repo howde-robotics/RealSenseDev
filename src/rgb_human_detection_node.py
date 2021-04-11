@@ -27,6 +27,7 @@ class rgb_human_detection_node():
 		# Define type of depth extraction
 		# self.centroid = True
 		self.binning = True
+		self.num_bins = 20
 
 		# Needed for depth image visualization
 		self.counter_depth = 0
@@ -214,7 +215,7 @@ class rgb_human_detection_node():
 			        for j in range(int(depth_ymin), int(depth_ymax+1)):
 			            bbox_pixel_depths.append(depth_array[j, i])
 
-			    hist, bin_edges = np.histogram(bbox_pixel_depths, bins=20)
+			    hist, bin_edges = np.histogram(bbox_pixel_depths, bins=self.num_bins)
 			    max_index = np.argmax(hist)
 			    best_depth = (bin_edges[max_index]+bin_edges[max_index+1])/2000.0
 
