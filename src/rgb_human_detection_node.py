@@ -179,9 +179,11 @@ class rgb_human_detection_node():
                 #self.mutex.acquire()
                 temp_obs.append(bbox)
                 #self.mutex.release()
-        
+        temp_image = None
         if self.depth_image is None:
 			return
+        else:
+            temp_image = self.depth_image.copy()
         
         #clear previous msgs
         self.poseMsgs = Objects()
@@ -198,7 +200,7 @@ class rgb_human_detection_node():
             # Convert each corner from color image to depth image
             depth_points = []
             for color_point in color_points:
-                depth_flattened = self.depth_image.flatten()
+                depth_flattened = temp_image.flatten()
                 depth_point = self.project_color_to_depth(depth_flattened, color_point)
                 depth_points.append(depth_point)
 
@@ -212,13 +214,14 @@ class rgb_human_detection_node():
             # self.scat_depth = plt.scatter(depth_points[:,0],depth_points[:,1])
             # plt.show()
             # plt.pause(0.00000000001)
-            #im_plotted = depth_image.copy()
-            # for p in depth_points:
+            im_plotted = temp_image.copy()
+            for p in depth_points:
             #for p in color_points:
-            #    im_plotted = cv2.circle(im_plotted, (int(p[0]), int(p[1])), 10, (0,0,255), -1)
+                im_plotted = cv2.circle(im_plotted, (int(p[0]), int(p[1])), 10, (0,0,255), -1)
 
             #cv2.imshow("image", im_plotted)
-            #self.test_pub.publish(bridge.cv2_to_imgmsg(im_plotted))
+            bridge2 = CvBridge()
+            self.test_pub.publish(bridge2.cv2_to_imgmsg(im_plotted))
 
             # Get mins and maxes of depth image bbox
             depth_xmin = min(depth_points[:,0])
@@ -233,7 +236,7 @@ class rgb_human_detection_node():
             # color_ymax = max(color_points[:,1])
 
             # Convert the depth image to a Numpy array
-            depth_array = np.array(self.depth_image, dtype=np.float32)
+            depth_array = np.array(temp_image, dtype=np.float32)
 
             # Find all pixel depth in bbox in order to find mode (best_depth)
             if self.binning:
