@@ -10,6 +10,7 @@ from dragoon_messages.msg import Objects
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+from threading import Lock
 
 # Class for detected YOLO objects
 class DetectedObject():
@@ -17,17 +18,20 @@ class DetectedObject():
 		self.probability = 0.0
 		self.id = 0
 		self.Class = "None"
-		self.xmin = 0
-		self.xmax = 0
-		self.ymin = 0
-		self.ymax = 0
+		self.xmin = 0.0
+		self.xmax = 0.0
+		self.ymin = 0.0
+		self.ymax = 0.0
 
 class rgb_human_detection_node():
     def __init__(self):
         # Define type of depth extraction
         # self.centroid = True
+        self.mutex = Lock()
         self.binning = True
         self.num_bins = 20
+        self.to_pub = False
+        self.depth_image = None
 
         # Needed for depth image visualization
         self.counter_depth = 0
@@ -38,9 +42,9 @@ class rgb_human_detection_node():
         self.scat_rgb = None
 
         # Subscriber for YOLO topic
-        self.bboxSub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.get_bbox)
+        self.bboxSub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.get_bbox, queue_size=1)
         # Subscriber for depth image
-        self.depthSub = rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.convert_depth_image)
+        self.depthSub = rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.convert_depth_image, queue_size=1) # , buffer_size=10000000
         # self.depthSub = rospy.Subscriber("/camera/aligned_depth_to_color/image_raw", Image, self.convert_depth_image)
         # Subscriber for RGB image - do NOT visualize depth and RGB simultaneously for now
         # self.rgbSub = rospy.Subscriber("/camera/color/image_raw", Image, self.show_color_image)
@@ -93,6 +97,10 @@ class rgb_human_detection_node():
         self.depth_min = 0.11
         # Maximum detectable depth
         self.depth_max = 10.0
+        
+    #    while not rospy.is_shutdown():
+     #       rospy.spin()
+     #       rospy.sleep(1.0/10)
 
     # Projects a pixel from RGB frame to depth frame. Reference C++ code in link below:
     # http://docs.ros.org/en/kinetic/api/librealsense2/html/rsutil_8h_source.html#l00186
@@ -156,32 +164,29 @@ class rgb_human_detection_node():
 
     # Convert info from YOLO topic to a DetectedObject, add to self.obs
     def get_bbox(self, bounding_box_msg):
-        # self.obs = []
+        temp_obs = []
+        #rospy.logfatal("DAN SUCKS")
         for bbox in bounding_box_msg.bounding_boxes:
-            YoloMsg = DetectedObject()
-            YoloMsg.xmin = bbox.xmin
-            YoloMsg.xmax = bbox.xmax
-            YoloMsg.ymin = bbox.ymin
-            YoloMsg.ymax = bbox.ymax
-            YoloMsg.probability = bbox.probability
-            YoloMsg.id = bbox.id
-            YoloMsg.Class = bbox.Class
-            self.obs.append(YoloMsg)
-
-    # Convert raw depth data to actual depth, get actual depth info of YOLO bboxes and publish to 'ObjectPoses'
-    def convert_depth_image(self, ros_image):
-        # try:
-        # if counter_depth % 5 == 0:
-        # Use cv_bridge() to convert the ROS image to OpenCV format
-        bridge = CvBridge()
-        # Convert the depth image using the default passthrough encoding
-        depth_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding="passthrough")
-        # depth_image = bridge.imgmsg_to_cv2(ros_image, ros_image.encoding)
-
+            if bbox.Class == 'person':
+                #YoloMsg = DetectedObject()
+                #YoloMsg.xmin = bbox.xmin
+                #Y3oloMsg.xmax = bbox.xmax
+                #YoloMsg.ymin = bbox.ymin
+                #YoloMsg.ymax = bbox.ymax
+                #YoloMsg.probability = bbox.probability
+                #YoloMsg.id = bbox.id
+                #YoloMsg.Class = bbox.Class
+                #self.mutex.acquire()
+                temp_obs.append(bbox)
+                #self.mutex.release()
+        
+        if self.depth_image is None:
+			return
+        
         #clear previous msgs
         self.poseMsgs = Objects()
 
-        for obj in self.obs:
+        for obj in temp_obs:
             # Get YOLO bbox corners
             color_points = [
                 [float(obj.xmin), float(obj.ymin)],
@@ -193,7 +198,7 @@ class rgb_human_detection_node():
             # Convert each corner from color image to depth image
             depth_points = []
             for color_point in color_points:
-                depth_flattened = depth_image.flatten()
+                depth_flattened = self.depth_image.flatten()
                 depth_point = self.project_color_to_depth(depth_flattened, color_point)
                 depth_points.append(depth_point)
 
@@ -207,13 +212,13 @@ class rgb_human_detection_node():
             # self.scat_depth = plt.scatter(depth_points[:,0],depth_points[:,1])
             # plt.show()
             # plt.pause(0.00000000001)
-            im_plotted = depth_image.copy()
+            #im_plotted = depth_image.copy()
             # for p in depth_points:
-            for p in color_points:
-                im_plotted = cv2.circle(im_plotted, (int(p[0]), int(p[1])), 10, (0,0,255), -1)
+            #for p in color_points:
+            #    im_plotted = cv2.circle(im_plotted, (int(p[0]), int(p[1])), 10, (0,0,255), -1)
 
-            cv2.imshow("image", im_plotted)
-            self.test_pub.publish(bridge.cv2_to_imgmsg(im_plotted))
+            #cv2.imshow("image", im_plotted)
+            #self.test_pub.publish(bridge.cv2_to_imgmsg(im_plotted))
 
             # Get mins and maxes of depth image bbox
             depth_xmin = min(depth_points[:,0])
@@ -228,13 +233,13 @@ class rgb_human_detection_node():
             # color_ymax = max(color_points[:,1])
 
             # Convert the depth image to a Numpy array
-            depth_array = np.array(depth_image, dtype=np.float32)
+            depth_array = np.array(self.depth_image, dtype=np.float32)
 
             # Find all pixel depth in bbox in order to find mode (best_depth)
             if self.binning:
                 bbox_pixel_depths = []
-                for i in range(int(depth_xmin), int(depth_xmax+1)):
-                    for j in range(int(depth_ymin), int(depth_ymax+1)):
+                for i in range(int(depth_xmin), int(depth_xmax)):
+                    for j in range(int(depth_ymin), int(depth_ymax)):
                 # for i in range(int(color_xmin), int(color_xmax)):
                 #     for j in range(int(color_ymin), int(color_ymax)):
                         bbox_pixel_depths.append(depth_array[j, i])
@@ -283,13 +288,31 @@ class rgb_human_detection_node():
                 self.poseMsgs.objects_info.append(poseMsg)
 
         # Publish Objects msg for frame once all YOLO objects are processed
-        if len(self.obs) != 0:
+        
+        if len(temp_obs) != 0:
             self.pub.publish(self.poseMsgs)
-        self.obs = []
+        #self.mutex.acquire()
+        #self.obs=[]
+        #self.mutex.release()
+        #self.obs = []
 
         # counter_depth += 1
         # except CvBridgeError, e:
             # print e
+
+    # Convert raw depth data to actual depth, get actual depth info of YOLO bboxes and publish to 'ObjectPoses'
+    def convert_depth_image(self, ros_image):
+        
+        #rospy.logfatal('depth sub')
+        # try:
+        # if counter_depth % 5 == 0:
+        # Use cv_bridge() to convert the ROS image to OpenCV format
+        bridge = CvBridge()
+        # Convert the depth image using the default passthrough encoding
+        self.depth_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding="passthrough")
+        # depth_image = bridge.imgmsg_to_cv2(ros_image, ros_image.encoding)
+
+
 
     # Visulize RGB stream with all bboxes
     def show_color_image(self, ros_image):
