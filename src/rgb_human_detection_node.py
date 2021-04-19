@@ -42,6 +42,8 @@ class rgb_human_detection_node():
         self.scat_rgb = None
 
         # Subscriber for YOLO topic
+        self.depthInfoSub = rospy.Subscriber("/camera/depth/camera_info", CameraInfo, self.imageDepthInfoCallback)
+        self.rgbInfoSub = rospy.Subscriber("camera/color/camera_info", CameraInfo, self.imageColorInfoCallback)
         self.bboxSub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.get_bbox, queue_size=1)
         # Subscriber for depth image
         self.depthSub = rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.convert_depth_image, queue_size=1) # , buffer_size=10000000
@@ -58,29 +60,31 @@ class rgb_human_detection_node():
 
         self.test_pub = rospy.Publisher('DepthImageWithBbox', Image, queue_size = 1)
 
+        self.depth_intrinsics = None
         # Hard-coded depth camera intrinsics
-        self.depth_intrinsics = rs2.intrinsics()
-        self.depth_intrinsics.width = 640
-        self.depth_intrinsics.height = 480
-        self.depth_intrinsics.ppx = 313.4207153
-        self.depth_intrinsics.ppy = 249.383
-        self.depth_intrinsics.fx = 382.8458
-        self.depth_intrinsics.fy = 382.8458
-        self.depth_intrinsics.model = rs2.distortion.brown_conrady
-        # self.depth_intrinsics.model = None
-        self.depth_intrinsics.coeffs = [0, 0, 0, 0, 0]
+        # self.depth_intrinsics = rs2.intrinsics()
+        # self.depth_intrinsics.width = 640
+        # self.depth_intrinsics.height = 480
+        # self.depth_intrinsics.ppx = 313.4207153
+        # self.depth_intrinsics.ppy = 249.383
+        # self.depth_intrinsics.fx = 382.8458
+        # self.depth_intrinsics.fy = 382.8458
+        # self.depth_intrinsics.model = rs2.distortion.brown_conrady
+        # # self.depth_intrinsics.model = None
+        # self.depth_intrinsics.coeffs = [0, 0, 0, 0, 0]
 
+        self.color_intrinsics = None
         # Hard-coded RGB camera intrinsics
-        self.color_intrinsics = rs2.intrinsics()
-        self.color_intrinsics.width = 640
-        self.color_intrinsics.height = 480
-        self.color_intrinsics.ppx = 313.195
-        self.color_intrinsics.ppy = 248.684
-        self.color_intrinsics.fx = 612.8899
-        self.color_intrinsics.fy = 613.1091
-        self.color_intrinsics.model = rs2.distortion.inverse_brown_conrady
-        # self.color_intrinsics.model = None
-        self.color_intrinsics.coeffs = [0, 0, 0, 0, 0]
+        # self.color_intrinsics = rs2.intrinsics()
+        # self.color_intrinsics.width = 640
+        # self.color_intrinsics.height = 480
+        # self.color_intrinsics.ppx = 313.195
+        # self.color_intrinsics.ppy = 248.684
+        # self.color_intrinsics.fx = 612.8899
+        # self.color_intrinsics.fy = 613.1091
+        # self.color_intrinsics.model = rs2.distortion.inverse_brown_conrady
+        # # self.color_intrinsics.model = None
+        # self.color_intrinsics.coeffs = [0, 0, 0, 0, 0]
 
         # Hard-coded extrinsics
         self.depth_to_color_extrin = rs2.extrinsics()
@@ -142,23 +146,38 @@ class rgb_human_detection_node():
             p = rs2.next_pixel_in_line(p, start_pixel, end_pixel)
         return to_pixel
 
-    # # Call this function to get depth intrinsics if camera is recalibrated
-    # def imageDepthInfoCallback(cameraInfo):
-    #     global intrinsics
-    #     if intrinsics:
-    #         return
-    #     intrinsics = rs2.intrinsics()
-    #     intrinsics.width = cameraInfo.width
-    #     intrinsics.height = cameraInfo.height
-    #     intrinsics.ppx = cameraInfo.K[2]
-    #     intrinsics.ppy = cameraInfo.K[5]
-    #     intrinsics.fx = cameraInfo.K[0]
-    #     intrinsics.fy = cameraInfo.K[4]
-    #     if cameraInfo.distortion_model == "plumb_bob":
-    #         intrinsics.model = rs2.distortion.brown_conrady
-    #     elif cameraInfo.distortion_model == "equidistant":
-    #         intrinsics.model = rs2.distortion.kannala_brandt4
-    #     intrinsics.coeffs = [i for i in cameraInfo.D]
+    # Call this function to get depth intrinsics if camera is recalibrated
+    def imageDepthInfoCallback(self, cameraInfo):
+        if self.depth_intrinsics:
+            return
+        self.depth_intrinsics = rs2.intrinsics()
+        self.depth_intrinsics.width = cameraInfo.width
+        self.depth_intrinsics.height = cameraInfo.height
+        self.depth_intrinsics.ppx = cameraInfo.K[2]
+        self.depth_intrinsics.ppy = cameraInfo.K[5]
+        self.depth_intrinsics.fx = cameraInfo.K[0]
+        self.depth_intrinsics.fy = cameraInfo.K[4]
+        if cameraInfo.distortion_model == "plumb_bob":
+            self.depth_intrinsics.model = rs2.distortion.brown_conrady
+        elif cameraInfo.distortion_model == "equidistant":
+            self.depth_intrinsics.model = rs2.distortion.kannala_brandt4
+        self.depth_intrinsics.coeffs = [i for i in cameraInfo.D]
+
+    def imageColorInfoCallback(self, cameraInfo):
+        if self.color_intrinsics:
+            return
+        self.color_intrinsics = rs2.intrinsics()
+        self.color_intrinsics.width = cameraInfo.width
+        self.color_intrinsics.height = cameraInfo.height
+        self.color_intrinsics.ppx = cameraInfo.K[2]
+        self.color_intrinsics.ppy = cameraInfo.K[5]
+        self.color_intrinsics.fx = cameraInfo.K[0]
+        self.color_intrinsics.fy = cameraInfo.K[4]
+        if cameraInfo.distortion_model == "plumb_bob":
+            self.color_intrinsics.model = rs2.distortion.brown_conrady
+        elif cameraInfo.distortion_model == "equidistant":
+            self.color_intrinsics.model = rs2.distortion.kannala_brandt4
+        self.color_intrinsics.coeffs = [i for i in cameraInfo.D]
 
     #     print(intrinsics)
 
@@ -182,6 +201,10 @@ class rgb_human_detection_node():
         temp_image = None
         if self.depth_image is None:
 			return
+        elif self.depth_intrinsics is None:
+            return
+        elif self.color_intrinsics is None:
+            return
         else:
             temp_image = self.depth_image.copy()
         
