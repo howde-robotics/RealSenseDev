@@ -14,14 +14,14 @@ from threading import Lock
 
 # Class for detected YOLO objects
 class DetectedObject():
-	def __init__(self):
-		self.probability = 0.0
-		self.id = 0
-		self.Class = "None"
-		self.xmin = 0.0
-		self.xmax = 0.0
-		self.ymin = 0.0
-		self.ymax = 0.0
+    def __init__(self):
+        self.probability = 0.0
+        self.id = 0
+        self.Class = "None"
+        self.xmin = 0.0
+        self.xmax = 0.0
+        self.ymin = 0.0
+        self.ymax = 0.0
 
 class rgb_human_detection_node():
     def __init__(self):
@@ -200,7 +200,7 @@ class rgb_human_detection_node():
                 #self.mutex.release()
         temp_image = None
         if self.depth_image is None:
-			return
+            return
         elif self.depth_intrinsics is None:
             return
         elif self.color_intrinsics is None:
@@ -359,14 +359,14 @@ class rgb_human_detection_node():
         self.counter_rgb += 1
 
 def main():
-	rospy.init_node('rgbHD',anonymous=True)
-	rgbDetectionNode = rgb_human_detection_node()
+    rospy.init_node('rgbHD',anonymous=True)
+    rgbDetectionNode = rgb_human_detection_node()
 
-	# These two lines needed for continuous visualization
-	#plt.ion()
-	#plt.show()
+    # These two lines needed for continuous visualization
+    #plt.ion()
+    #plt.show()
 
-	rospy.spin()
+    rospy.spin()
 
 if __name__ == '__main__':
     main()
