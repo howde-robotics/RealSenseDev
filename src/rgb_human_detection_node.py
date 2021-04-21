@@ -3,6 +3,7 @@ import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
+from std_msgs.msg import Empty
 import pyrealsense2 as rs2
 from darknet_ros_msgs.msg import BoundingBoxes
 from dragoon_messages.msg import ObjectInfo
@@ -27,6 +28,12 @@ class rgb_human_detection_node():
     def __init__(self):
         # Define type of depth extraction
         self.centroid = False
+        # self.centroid = True
+
+        #hearbeat publisher and heartbeat timer
+        self.heartbeat_pub = rospy.Publisher('RelLocHeartbeat', Empty, queue_size=1)
+        self.timer = rospy.Timer(rospy.Duration(1), self.timer_callback)
+
         self.mutex = Lock()
         self.binning = True
         self.num_bins = 40
@@ -357,6 +364,10 @@ class rgb_human_detection_node():
                 #plt.pause(0.00000000001)
 
         self.counter_rgb += 1
+
+    def timer_callback(self, timer):
+        msg = Empty()
+        self.heartbeat_pub.publish(msg)
 
 def main():
     rospy.init_node('rgbHD',anonymous=True)
