@@ -26,10 +26,10 @@ class DetectedObject():
 class rgb_human_detection_node():
     def __init__(self):
         # Define type of depth extraction
-        # self.centroid = True
+        self.centroid = False
         self.mutex = Lock()
         self.binning = True
-        self.num_bins = 20
+        self.num_bins = 40
         self.to_pub = False
         self.depth_image = None
 
@@ -58,7 +58,7 @@ class rgb_human_detection_node():
         # List of objects detected by YOLO in current frame
         self.obs = []
 
-        self.test_pub = rospy.Publisher('DepthImageWithBbox', Image, queue_size = 1)
+        #self.test_pub = rospy.Publisher('DepthImageWithBbox', Image, queue_size = 1)
 
         self.depth_intrinsics = None
         # Hard-coded depth camera intrinsics
@@ -237,14 +237,14 @@ class rgb_human_detection_node():
             # self.scat_depth = plt.scatter(depth_points[:,0],depth_points[:,1])
             # plt.show()
             # plt.pause(0.00000000001)
-            im_plotted = temp_image.copy()
-            for p in depth_points:
+            #im_plotted = temp_image.copy()
+            #for p in depth_points:
             #for p in color_points:
-                im_plotted = cv2.circle(im_plotted, (int(p[0]), int(p[1])), 10, (0,0,255), -1)
+            #    im_plotted = cv2.circle(im_plotted, (int(p[0]), int(p[1])), 10, (0,0,255), -1)
 
             #cv2.imshow("image", im_plotted)
-            bridge2 = CvBridge()
-            self.test_pub.publish(bridge2.cv2_to_imgmsg(im_plotted))
+            #bridge2 = CvBridge()
+            #self.test_pub.publish(bridge2.cv2_to_imgmsg(im_plotted))
 
             # Get mins and maxes of depth image bbox
             depth_xmin = min(depth_points[:,0])
