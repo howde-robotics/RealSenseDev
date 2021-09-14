@@ -5,9 +5,9 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
 from std_msgs.msg import Empty
 import pyrealsense2 as rs2
-# from darknet_ros_msgs.msg import BoundingBoxes
-# from dragoon_messages.msg import ObjectInfo
-# from dragoon_messages.msg import Objects
+from darknet_ros_msgs.msg import BoundingBoxes
+from dragoon_messages.msg import ObjectInfo
+from dragoon_messages.msg import Objects
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -53,8 +53,8 @@ class rgb_human_detection_node():
         # Subscriber for YOLO topic
         self.depthInfoSub = rospy.Subscriber("/camera/depth/camera_info", CameraInfo, self.imageDepthInfoCallback)
         self.rgbInfoSub = rospy.Subscriber("camera/color/camera_info", CameraInfo, self.imageColorInfoCallback)
-        self.SeekSub = rospy.Subscriber("/seek_camera/displayImage", Image, self.project_IR_to_depth)
-        self.bboxSub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.get_bbox_IR, queue_size=1)
+        # self.SeekSub = rospy.Subscriber("/seek_camera/displayImage", Image, self.project_IR_to_depth)
+        self.bboxSub = rospy.Subscriber("/darknet_ros_thermal/bounding_boxes", BoundingBoxes, self.get_bbox_IR, queue_size=1)
         # Subscriber for depth image
         self.depthSub = rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.convert_depth_image, queue_size=1) # , buffer_size=10000000
         # self.depthSub = rospy.Subscriber("/camera/aligned_depth_to_color/image_raw", Image, self.convert_depth_image)
@@ -62,11 +62,11 @@ class rgb_human_detection_node():
         # self.rgbSub = rospy.Subscriber("/camera/color/image_raw", Image, self.show_color_image)
 
         # # Publisher that will publish list of poses/object infos as an Objects message
-        # self.pub = rospy.Publisher('ObjectPoses', Objects, queue_size = 1)
+        self.pub = rospy.Publisher('ObjectPoses', Objects, queue_size = 1)
         # # Objects message to be published, consisting of poses/infos stored as ObjectInfo messages
-        # self.poseMsgs = Objects()
+        self.poseMsgs = Objects()
         # # List of objects detected by YOLO in current frame
-        # self.obs = []
+        self.obs = []
 
         #self.test_pub = rospy.Publisher('DepthImageWithBbox', Image, queue_size = 1)
 
@@ -422,7 +422,7 @@ class rgb_human_detection_node():
 
     def get_bbox_IR(self, bounding_box_msg):
         temp_obs = []
-        #rospy.logfatal("DAN SUCKS")
+        # rospy.logfatal("DAN SUCKS")
         for bbox in bounding_box_msg.bounding_boxes:
             if bbox.Class == 'person':
                 #YoloMsg = DetectedObject()
@@ -565,7 +565,7 @@ class rgb_human_detection_node():
             # print e
 
 
-    # Convert raw depth data to actual depth, get actual depth info of YOLO bboxes and publish to 'ObjectPoses'
+    # Convert raw depth data to actual depth, get actual depth info of YOLO bboxes and publish to 'objectPoses'
     def convert_depth_image(self, ros_image):
         
         #rospy.logfatal('depth sub')

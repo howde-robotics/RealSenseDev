@@ -51,7 +51,7 @@ class rgb_human_detection_node():
         # Subscriber for YOLO topic
         self.depthInfoSub = rospy.Subscriber("/camera/depth/camera_info", CameraInfo, self.imageDepthInfoCallback)
         self.rgbInfoSub = rospy.Subscriber("camera/color/camera_info", CameraInfo, self.imageColorInfoCallback)
-        self.bboxSub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.get_bbox, queue_size=1)
+        self.bboxSub = rospy.Subscriber("/darknet_ros_rgb/bounding_boxes", BoundingBoxes, self.get_bbox, queue_size=1)
         # Subscriber for depth image
         self.depthSub = rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.convert_depth_image, queue_size=1) # , buffer_size=10000000
         # self.depthSub = rospy.Subscriber("/camera/aligned_depth_to_color/image_raw", Image, self.convert_depth_image)

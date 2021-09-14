@@ -1,4 +1,6 @@
 <launch>
-    <node pkg="rgb_human_detection_node" type="rgb_human_detection_node.py" name="rgb_human_detection_node">
+    <!-- node pkg="rgb_human_detection_node" type="rgb_human_detection_node.py" name="rgb_human_detection_node">
+    </node-->
+	<node pkg="rgb_human_detection_node" type="seek2depth.py" name="ir_human_detection_node">
     </node>
 </launch>
