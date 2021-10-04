@@ -5,7 +5,11 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
 from std_msgs.msg import Empty
 import pyrealsense2 as rs2
-from darknet_ros_msgs.msg import BoundingBoxes
+# from darknet_ros_msgs.msg import BoundingBoxes
+from yolov4_trt_ros.msg import BoundingBox2D
+from yolov4_trt_ros.msg import Detector2D
+from yolov4_trt_ros.msg import Detector2DArray
+from yolov4_trt_ros.msg import ObjectHypothesis
 from dragoon_messages.msg import ObjectInfo
 from dragoon_messages.msg import Objects
 import matplotlib.pyplot as plt
@@ -51,7 +55,8 @@ class rgb_human_detection_node():
         # Subscriber for YOLO topic
         self.depthInfoSub = rospy.Subscriber("/camera/depth/camera_info", CameraInfo, self.imageDepthInfoCallback)
         self.rgbInfoSub = rospy.Subscriber("camera/color/camera_info", CameraInfo, self.imageColorInfoCallback)
-        self.bboxSub = rospy.Subscriber("/darknet_ros_rgb/bounding_boxes", BoundingBoxes, self.get_bbox, queue_size=1)
+        # self.bboxSub = rospy.Subscriber("/darknet_ros_rgb/bounding_boxes", BoundingBoxes, self.get_bbox, queue_size=1)
+        self.bboxSub = rospy.Subscriber("/detections/rgb", Detector2DArray, self.get_bbox, queue_size=1)
         # Subscriber for depth image
         self.depthSub = rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.convert_depth_image, queue_size=1) # , buffer_size=10000000
         # self.depthSub = rospy.Subscriber("/camera/aligned_depth_to_color/image_raw", Image, self.convert_depth_image)
@@ -189,11 +194,12 @@ class rgb_human_detection_node():
     #     print(intrinsics)
 
     # Convert info from YOLO topic to a DetectedObject, add to self.obs
-    def get_bbox(self, bounding_box_msg):
+    def get_bbox(self, detector_2d_array):
         temp_obs = []
         #rospy.logfatal("DAN SUCKS")
-        for bbox in bounding_box_msg.bounding_boxes:
-            if bbox.Class == 'person':
+        # for bbox in bounding_box_msg.bounding_boxes:
+        for detection in detector_2d_array.detections:
+            if detection.results.id == 0:
                 #YoloMsg = DetectedObject()
                 #YoloMsg.xmin = bbox.xmin
                 #Y3oloMsg.xmax = bbox.xmax
@@ -203,7 +209,7 @@ class rgb_human_detection_node():
                 #YoloMsg.id = bbox.id
                 #YoloMsg.Class = bbox.Class
                 #self.mutex.acquire()
-                temp_obs.append(bbox)
+                temp_obs.append(detection)
                 #self.mutex.release()
         temp_image = None
         if self.depth_image is None:
@@ -218,13 +224,21 @@ class rgb_human_detection_node():
         #clear previous msgs
         self.poseMsgs = Objects()
 
-        for obj in temp_obs:
+        for detection in temp_obs:
             # Get YOLO bbox corners
+            center_x = detection.bbox.center.x
+            center_y = detection.bbox.center.y
+            size_x = detection.bbox.size_x
+            size_y = detection.bbox.size_y
             color_points = [
-                [float(obj.xmin), float(obj.ymin)],
-                [float(obj.xmax), float(obj.ymin)],
-                [float(obj.xmin), float(obj.ymax)],
-                [float(obj.xmax), float(obj.ymax)]
+                # [float(obj.xmin), float(obj.ymin)],
+                # [float(obj.xmax), float(obj.ymin)],
+                # [float(obj.xmin), float(obj.ymax)],
+                # [float(obj.xmax), float(obj.ymax)]
+                [float(center_x-size_x/2), float(center_y-size_y/2)],
+                [float(center_x+size_x/2), float(center_y-size_y/2)],
+                [float(center_x-size_x/2), float(center_y+size_y/2)],
+                [float(center_x+size_x/2), float(center_y+size_y/2)]
             ]
 
             # Convert each corner from color image to depth image
