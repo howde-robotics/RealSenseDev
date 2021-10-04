@@ -327,9 +327,9 @@ class rgb_human_detection_node():
                     poseMsg.pose.z = best_depth
                 elif self.centroid:
                     poseMsg.pose.z = result[2]/1000.0
-                poseMsg.probability = obj.probability
-                poseMsg.id = obj.id
-                poseMsg.Class = obj.Class  
+                poseMsg.probability = 0.7
+                poseMsg.id = 0
+                poseMsg.Class = "person"  
 
                 # Add new poseMsg to poseMsgs, Objects msg that will be published
                 self.poseMsgs.objects_info.append(poseMsg)

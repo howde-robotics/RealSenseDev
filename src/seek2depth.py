@@ -8,6 +8,10 @@ import pyrealsense2 as rs2
 from darknet_ros_msgs.msg import BoundingBoxes
 from dragoon_messages.msg import ObjectInfo
 from dragoon_messages.msg import Objects
+from yolov4_trt_ros.msg import BoundingBox2D
+from yolov4_trt_ros.msg import Detector2D
+from yolov4_trt_ros.msg import Detector2DArray
+from yolov4_trt_ros.msg import ObjectHypothesis
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -224,7 +228,7 @@ class rgb_human_detection_node():
             self.color_intrinsics.model = rs2.distortion.kannala_brandt4
         self.color_intrinsics.coeffs = [i for i in cameraInfo.D]
 
-    def get_bbox_IR(self, bounding_box_msg):
+    def get_bbox_IR(self, detector_2d_array):
         temp_obs = []
         # rospy.logfatal("DAN SUCKS")
         for detection in detector_2d_array.detections:
@@ -353,9 +357,9 @@ class rgb_human_detection_node():
                     poseMsg.pose.z = best_depth
                 elif self.centroid:
                     poseMsg.pose.z = result[2]/1000.0
-                poseMsg.probability = obj.probability
-                poseMsg.id = obj.id
-                poseMsg.Class = obj.Class  
+                poseMsg.probability = 0.7
+                poseMsg.id = 0
+                poseMsg.Class = "person"  
 
                 # Add new poseMsg to poseMsgs, Objects msg that will be published
                 self.poseMsgs.objects_info.append(poseMsg)
