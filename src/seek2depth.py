@@ -357,7 +357,7 @@ class rgb_human_detection_node():
                     poseMsg.pose.z = best_depth
                 elif self.centroid:
                     poseMsg.pose.z = result[2]/1000.0
-                poseMsg.probability = 0.7
+                poseMsg.probability = detection.results.score
                 poseMsg.id = 0
                 poseMsg.Class = "person"  
 
