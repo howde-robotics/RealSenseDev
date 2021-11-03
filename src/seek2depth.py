@@ -319,7 +319,7 @@ class rgb_human_detection_node():
                     for j in range(int(depth_ymin), int(depth_ymax)):
                 # for i in range(int(color_xmin), int(color_xmax)):
                 #     for j in range(int(color_ymin), int(color_ymax)):
-                        if depth_array[j, i] > 0.3:
+                        if depth_array[j, i] > 0.2:
                             bbox_pixel_depths.append(depth_array[j, i])
 
                 hist, bin_edges = np.histogram(bbox_pixel_depths, bins=self.num_bins)
