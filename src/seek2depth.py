@@ -363,11 +363,13 @@ class rgb_human_detection_node():
                 poseMsg.Class = "person"  
 
                 # Add new poseMsg to poseMsgs, Objects msg that will be published
-                self.poseMsgs.objects_info.append(poseMsg)
+                if poseMsg.pose.y > -1.0:
+                    self.poseMsgs.objects_info.append(poseMsg)
 
         # Publish Objects msg for frame once all YOLO objects are processed
         
-        if len(temp_obs) != 0:
+        # if len(temp_obs) != 0:
+        if len(self.poseMsgs.objects_info) > 0:
             self.pub.publish(self.poseMsgs)
         #self.mutex.acquire()
         #self.obs=[]
