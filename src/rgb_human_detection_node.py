@@ -31,15 +31,16 @@ class DetectedObject():
 class rgb_human_detection_node():
     def __init__(self):
         # Define type of depth extraction
-        self.centroid = False
-        # self.centroid = True
+        # self.centroid = False
+        self.centroid = True
 
         #hearbeat publisher and heartbeat timer
         self.heartbeat_pub = rospy.Publisher('RelLocHeartbeat', Empty, queue_size=1)
         self.timer = rospy.Timer(rospy.Duration(1), self.timer_callback)
 
         self.mutex = Lock()
-        self.binning = True
+        # self.binning = True
+        self.binning = False
         self.num_bins = 40
         self.to_pub = False
         self.depth_image = None
@@ -289,7 +290,8 @@ class rgb_human_detection_node():
                     for j in range(int(depth_ymin), int(depth_ymax)):
                 # for i in range(int(color_xmin), int(color_xmax)):
                 #     for j in range(int(color_ymin), int(color_ymax)):
-                        bbox_pixel_depths.append(depth_array[j, i])
+                        if depth_array[j, i] > 0.2:
+                            bbox_pixel_depths.append(depth_array[j, i])
 
                 hist, bin_edges = np.histogram(bbox_pixel_depths, bins=self.num_bins)
                 max_index = np.argmax(hist)
