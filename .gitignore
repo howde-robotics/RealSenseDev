@@ -1,1 +1,4 @@
 CATKIN_IGNORE
+.vscode/
+*.swn
+*.swo
